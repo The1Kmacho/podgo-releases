@@ -12,6 +12,24 @@ This **public distribution repository** hosts versioned Android downloads for **
 
 PodGo is unofficial and is not endorsed by or affiliated with Wizards of the Coast. Magic: The Gathering and Commander are trademarks of their respective owners. Card content retrieved from Scryfall belongs to its respective rights holders. Scryfall is not affiliated with this application.
 
+## Release channels
+
+PodGo's public channels share **one permanent Android release signing key**,
+but use different Android package IDs. You can install them side by side:
+
+| Channel | Home-screen name | Android package ID |
+| --- | --- | --- |
+| Stable | PodGo | `com.the1kmacho.mtggo.unity` |
+| Preview | PodGo Preview | `com.the1kmacho.mtggo.unity.preview` |
+| Beta | PodGo Beta | `com.the1kmacho.mtggo.unity.beta` |
+| Alpha | PodGo Alpha | `com.the1kmacho.mtggo.unity.alpha` |
+
+The private development build uses `com.the1kmacho.mtggo.unity.dev`,
+which is not a public release channel. Each application has independent local
+storage, deck lists, card-art cache, and settings. Switching channels does not
+transfer your data automatically; release updates apply **within** a channel,
+provided Android signing identity and version codes are compatible.
+
 ## Install and update
 
 Once a release is available, open **Releases** on the right of this page (or the releases tab on mobile), download the `PodGo-Android-arm64.apk` file, and follow your Android device's install prompts. Installation from outside the Play Store may require approval for that browser/file manager.
