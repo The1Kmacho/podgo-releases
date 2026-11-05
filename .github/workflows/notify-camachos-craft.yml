@@ -1,0 +1,60 @@
+name: Refresh Camacho's Craft when a release is published
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: camachos-craft-release-notification
+  cancel-in-progress: false
+
+jobs:
+  notify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Wait for uploaded release assets
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ID: ${{ github.event.release.id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # The publish event can arrive before a CI publisher finishes
+          # uploading its APK/JAR/etc. Wait instead of deploying stale data.
+          for attempt in $(seq 1 18); do
+            count="$(gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?per_page=100" \
+              --jq '[.[] | select(.state == "uploaded" and
+                (.name | test("\\.(apk|aab|ipa|jar|zip|7z|exe|msi|dmg|deb|AppImage|tar\\.gz)$"; "i")))] | length')"
+            if (( count > 0 )); then
+              echo "Found $count published installable asset(s)."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::No uploaded installable release asset after 3 minutes; finish publishing assets and re-run this workflow."
+          exit 1
+
+      - name: Request a production site refresh
+        env:
+          DEPLOY_HOOK_URL: ${{ secrets.CLOUDFLARE_DEPLOY_HOOK_URL }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "$DEPLOY_HOOK_URL" ]]; then
+            echo "::error::Set the CLOUDFLARE_DEPLOY_HOOK_URL Actions secret in this release repository."
+            exit 1
+          fi
+          reply="$(curl --silent --show-error --fail-with-body --retry 3 \
+            --retry-all-errors --retry-delay 3 --max-time 30 \
+            --request POST "$DEPLOY_HOOK_URL")"
+          if ! jq -e '.success == true and (.result.build_uuid | type == "string")' <<<"$reply" >/dev/null; then
+            echo "::error::Cloudflare Deploy Hook did not accept the refresh request."
+            exit 1
+          fi
+          echo "Camacho's Craft refresh requested (build $(jq -r '.result.build_uuid' <<<"$reply"))."
