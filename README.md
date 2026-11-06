@@ -8,7 +8,7 @@ This **public distribution repository** hosts versioned Android downloads for **
 - Release pages include version details, minimum Android requirements, SHA-256 checksums and notices.
 - Development / experimental releases are labeled as prereleases; stable releases are published only after testing.
 
-**There are no downloadable public builds yet.** Do not download APKs from unverified mirrors.
+Official public builds appear under [GitHub Releases](https://github.com/The1Kmacho/podgo-releases/releases). Do not download APKs from unverified mirrors.
 
 PodGo is unofficial and is not endorsed by or affiliated with Wizards of the Coast. Magic: The Gathering and Commander are trademarks of their respective owners. Card content retrieved from Scryfall belongs to its respective rights holders. Scryfall is not affiliated with this application.
 
@@ -37,3 +37,9 @@ Once a release is available, open **Releases** on the right of this page (or the
 Keep the same app package and signing certificate when updating: an APK signed with a different key cannot replace an installed build in place. Back up local data before changing between testing and public versions.
 
 Visit Camacho's Craft for the app's project page and the current release history after publication.
+
+## Camacho's Craft release notification
+
+Publishing a GitHub Release with an uploaded installable APK triggers `.github/workflows/notify-camachos-craft.yml`. That workflow requests a fresh production build of Camacho's Craft through a Cloudflare Workers Deploy Hook; the site build retrieves the latest GitHub release metadata automatically. It can also be run manually from Actions if a release event was missed.
+
+The repository needs an Actions secret named **`CLOUDFLARE_DEPLOY_HOOK_URL`**, containing the deploy hook URL for the Camacho's Craft Worker on its `main` branch. Never commit or disclose the hook URL. The website also performs a six-hour backup synchronization.
